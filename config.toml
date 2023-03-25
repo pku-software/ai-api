@@ -1,0 +1,39 @@
+# The path to the log file
+log_file = "log.txt"
+
+# The path to the database file
+db_file = "db.sqlite"
+
+# openAI API token
+api_token = ""
+
+# The maximum number of requests per minute
+max_request = 60
+
+# The maximum number of requests per minute per user
+max_request_per_user = 30
+
+# Allowed users
+allow_users = "users.csv"
+
+# Default settings for the bots
+
+[translate]
+source = "en"
+target = "zh"
+
+[chat]
+max_tokens = 100
+temperature = 0.9
+top_p = 1
+frequency_penalty = 0
+presence_penalty = 0
+stop = ["\n", " Human:", " AI:"]
+
+[draw]
+number = 1
+width = 1024
+height = 1024
+
+[math]
+width = 512
