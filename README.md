@@ -2,6 +2,8 @@
 
 This is a simple web server for calling openai APIs. It is designed for PKU software course (aka. 软件设计实践) project.
 
+** Warning: The project is finished in a harry, filled with awful practices. DO NOT LEARN FROM IT. **
+
 ## Installation
 
 ```bash
@@ -16,7 +18,7 @@ See the help message for more information.
 
 ```bash
 
-ai-api-server [-c config.toml] [-b 0.0.0.0:4399] [--debug]
+ai-api-server -c config.toml -b 0.0.0.0:4399 --debug
 
 ```
 
