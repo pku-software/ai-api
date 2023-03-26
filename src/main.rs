@@ -9,6 +9,7 @@ extern crate log;
 pub(crate) mod config;
 pub(crate) mod db;
 pub(crate) mod handler;
+pub(crate) mod openai;
 pub(crate) mod translate;
 
 pub(crate) static CONFIG: Lazy<Config> = Lazy::new(|| Config::from_toml("config.toml"));
@@ -93,7 +94,25 @@ async fn main() {
         .and(warp::body::json())
         .then(handler::translate);
 
-    let routes = index.or(get_token_api).or(translate_api);
+    // /api/ai/v1/chat
+    let chat_api = warp::path!("api" / "v1" / "ai" / "chat")
+        .and(warp::post())
+        .and(warp::header("Authorization"))
+        .and(warp::body::json())
+        .then(handler::chat);
+
+    // use reqwest to get google for conectivity test
+    let client = reqwest::Client::new();
+    let res = client.get("https://www.google.com").send().await.unwrap();
+    let status = res.status();
+    if status.is_success() {
+        info!("Google connectivity test passed");
+    } else {
+        error!("Google connectivity test failed");
+        return;
+    }
+
+    let routes = index.or(get_token_api).or(translate_api).or(chat_api);
 
     warp::serve(routes).run(([0, 0, 0, 0], 4399)).await;
 }

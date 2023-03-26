@@ -31,27 +31,23 @@ async fn baidu_translate(from: &str, to: &str, text: &str) -> Result<serde_json:
     let resp = match reqwest::get(&url).await {
         Ok(resp) => resp,
         Err(err) => {
-            return Err(format!(
-                "Failed to get response from Baidu translate: {}",
-                err
-            ));
+            error!("Failed to get response from Baidu translate: {}", err);
+            return Err(format!("Failed to get response from Baidu translate",));
         }
     };
 
     let json: serde_json::Value = match resp.json().await {
         Ok(json) => json,
         Err(err) => {
-            return Err(format!(
-                "Failed to parse response from Baidu translate: {}",
-                err
-            ));
+            error!("Failed to parse response from Baidu translate: {}", err);
+            return Err(format!("Failed to parse response from Baidu translate"));
         }
     };
 
     Ok(json)
 }
 
-async fn translate(from: &str, to: &str, text: &str) -> serde_json::Value {
+pub(crate) async fn translate(from: &str, to: &str, text: &str) -> serde_json::Value {
     let text = match baidu_translate(from, to, text).await {
         Ok(json) => json!({
             "status": "ok",

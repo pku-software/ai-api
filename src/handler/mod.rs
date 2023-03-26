@@ -1,9 +1,23 @@
 use crate::db;
 use crate::db::student::Student;
 use crate::db::*;
+use crate::openai::chat;
+use crate::translate;
 use crate::CONFIG;
 use std::collections::HashMap;
 use warp::http::Response;
+
+async fn check_token(token: &String) -> Result<(), String> {
+    let collection = db::generate_connection(&CONFIG).await;
+    let token = token.trim().split(" ").collect::<Vec<&str>>()[1].to_owned();
+    let student = get_student(&collection, &token).await;
+    if let Some(student) = student {
+        db::add_one(&collection, student).await;
+        return Ok(());
+    } else {
+        return Err(format!("Invalid token {:}", token));
+    }
+}
 
 pub(crate) async fn get_token(map: HashMap<String, String>) -> Response<String> {
     let collection = db::generate_connection(&CONFIG).await;
@@ -58,23 +72,74 @@ pub(crate) async fn get_token(map: HashMap<String, String>) -> Response<String> 
 }
 
 pub(crate) async fn translate(token: String, map: HashMap<String, String>) -> Response<String> {
-    let collection = db::generate_connection(&CONFIG).await;
-    // Verify token, the header is like `Authorization: Basic dGVzdA==`
-    let token = token.trim().split(" ").collect::<Vec<&str>>()[1].to_owned();
-    let student = get_student(&collection, &token).await;
-    if let Some(student) = student {
-        db::add_one(&collection, student).await;
-    } else {
+    let token_result = check_token(&token).await;
+    if let Err(err) = token_result {
+        warn!("Invalid token: {}", err);
         return Response::builder()
             .header("Content-Type", "text/plain")
-            .header("Status-Code", 403)
-            .body("FORBIDDEN".to_owned())
+            .header("Status-Code", "403")
+            .body(err)
             .unwrap();
     }
 
+    let text = match map.get("text") {
+        Some(text) => text,
+        None => {
+            return Response::builder()
+                .header("Content-Type", "text/plain")
+                .header("Status-Code", "400")
+                .body("BAD REQUEST".to_owned())
+                .unwrap();
+        }
+    };
+    let text = text.clone().trim().to_string();
+
+    let from = match map.get("from") {
+        Some(from) => from,
+        None => &CONFIG.translate.source,
+    };
+
+    let to = match map.get("to") {
+        Some(to) => to,
+        None => &CONFIG.translate.target,
+    };
+
+    let result = translate::translate(&text, from, to).await.to_string();
     Response::builder()
-        .header("Content-Type", "application/json")
+        .header("Content-Type", "text/plain")
         .header("Status-Code", "200")
-        .body("".to_owned())
+        .body(result)
+        .unwrap()
+}
+
+pub(crate) async fn chat(token: String, map: HashMap<String, String>) -> Response<String> {
+    let token_result = check_token(&token).await;
+    if let Err(err) = token_result {
+        warn!("Invalid token: {}", err);
+        return Response::builder()
+            .header("Content-Type", "text/plain")
+            .header("Status-Code", "403")
+            .body(err)
+            .unwrap();
+    }
+
+    let prompt = match map.get("prompt") {
+        Some(prompt) => prompt,
+        None => {
+            return Response::builder()
+                .header("Content-Type", "text/plain")
+                .header("Status-Code", "400")
+                .body("BAD REQUEST".to_owned())
+                .unwrap();
+        }
+    };
+
+    let prompt = prompt.clone().trim().to_string();
+
+    let ans = chat::chat(&CONFIG.chat, &prompt).await;
+    Response::builder()
+        .header("Content-Type", "text/plain")
+        .header("Status-Code", "200")
+        .body(ans.to_string())
         .unwrap()
 }
