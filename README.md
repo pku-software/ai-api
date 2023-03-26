@@ -24,9 +24,17 @@ ai-api-server -c config.toml -b 0.0.0.0:4399 --debug
 
 ## Configuration
 
-You can configure the server by editing the `config.toml` file.
+You can configure the server by editing the `config.toml` file. 
 
 ## API
+
+A token is needed for all requests. You should put the token in the `Authorization` header using the `Bearer` scheme.
+
+For example, if your token is `dGVzdA==`, just put it in your header.
+
+```http
+Authorization: Basic dGVzdA==
+```
 
 ### POST /api/ai/v1/translate
 
