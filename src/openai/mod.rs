@@ -1,3 +1,3 @@
 pub(crate) mod chat;
-mod draw;
+pub(crate) mod draw;
 mod test;

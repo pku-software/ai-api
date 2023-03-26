@@ -1,7 +1,7 @@
 use crate::db;
 use crate::db::student::Student;
 use crate::db::*;
-use crate::openai::chat;
+use crate::openai::{chat, draw};
 use crate::translate;
 use crate::CONFIG;
 use std::collections::HashMap;
@@ -137,6 +137,69 @@ pub(crate) async fn chat(token: String, map: HashMap<String, String>) -> Respons
     let prompt = prompt.clone().trim().to_string();
 
     let ans = chat::chat(&CONFIG.chat, &prompt).await;
+    Response::builder()
+        .header("Content-Type", "text/plain")
+        .header("Status-Code", "200")
+        .body(ans.to_string())
+        .unwrap()
+}
+
+async fn draw(token: String, map: HashMap<String, String>) -> Response<String> {
+    let token_result = check_token(&token).await;
+    if let Err(err) = token_result {
+        warn!("Invalid token: {}", err);
+        return Response::builder()
+            .header("Content-Type", "text/plain")
+            .header("Status-Code", "403")
+            .body(err)
+            .unwrap();
+    }
+
+    let prompt = match map.get("prompt") {
+        Some(prompt) => prompt,
+        None => {
+            return Response::builder()
+                .header("Content-Type", "text/plain")
+                .header("Status-Code", "400")
+                .body("BAD REQUEST".to_owned())
+                .unwrap();
+        }
+    };
+
+    let prompt = prompt.clone().trim().to_string();
+
+    let height = map.get("height");
+
+    let height = match height {
+        Some(height) => height.parse::<i32>().unwrap(),
+        None => CONFIG.draw.height,
+    };
+
+    let width = map.get("width");
+
+    let width = match width {
+        Some(width) => width.parse::<i32>().unwrap(),
+        None => CONFIG.draw.width,
+    };
+
+    if width != height {
+        return Response::builder()
+            .header("Content-Type", "text/plain")
+            .header("Status-Code", "400")
+            .body("BAD REQUEST".to_owned())
+            .unwrap();
+    }
+
+    if width != 256 && width != 512 && width != 1024 {
+        return Response::builder()
+            .header("Content-Type", "text/plain")
+            .header("Status-Code", "400")
+            .body("BAD REQUEST".to_owned())
+            .unwrap();
+    }
+
+    let ans = draw::draw(prompt, height, width).await;
+
     Response::builder()
         .header("Content-Type", "text/plain")
         .header("Status-Code", "200")
