@@ -79,12 +79,6 @@ Interact with a chatbot. You should provide a prompt for the chatbot to generate
 ```json
 {
     "prompt": "Hello, I am a chatbot. How are you?",
-    "max_tokens": 10,
-    "temperature": 0.9,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
-    "stop": ["\n", " Human:", " AI:"]
 }
 ```
 
