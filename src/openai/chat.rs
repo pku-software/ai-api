@@ -10,7 +10,7 @@ pub(crate) async fn chat(chat_config: &Chat, prompt: &str) -> serde_json::Value 
 
     let mut messages = vec![ChatCompletionMessage {
         role: ChatCompletionMessageRole::System,
-        content: "You are a large language model built into a command line interface for PKU software course homework".to_string(),
+        content: "You are a large language model built into a command line interface for PKU software course homework. Please speak in English only".to_string(),
         name: None,
     }];
 
