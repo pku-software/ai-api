@@ -1,27 +1,24 @@
 use clap_v3::{App, Arg};
 use config::Config;
 use env_logger;
-
+use once_cell::sync::Lazy;
+use warp::Filter;
 #[macro_use]
 extern crate log;
 
 pub(crate) mod config;
 pub(crate) mod db;
 pub(crate) mod handler;
+pub(crate) mod translate;
 
-fn main() {
+pub(crate) static CONFIG: Lazy<Config> = Lazy::new(|| Config::from_toml("config.toml"));
+
+#[tokio::main]
+async fn main() {
     let matches = App::new("AI api server")
         .version("0.1")
         .author("Yuanhang Sun")
         .about("AI api server")
-        .arg(
-            Arg::with_name("config")
-                .short('c')
-                .long("config")
-                .value_name("FILE")
-                .help("Sets a custom config file")
-                .takes_value(true),
-        )
         .arg(
             Arg::with_name("bind")
                 .short('b')
@@ -38,7 +35,6 @@ fn main() {
                 .takes_value(false),
         )
         .get_matches();
-    let config = matches.value_of("config").unwrap_or("config.toml");
     let bind = matches.value_of("bind").unwrap_or("0.0.0.0:4399");
     let debug = matches.is_present("debug");
 
@@ -53,13 +49,51 @@ fn main() {
     }
 
     info!("Starting AI api server...");
-
-    info!("Config file: {}", config);
     info!("Bind to: {}", bind);
     info!("Debug mode: {}", debug);
 
-    let config = Config::from_toml(config);
+    db::init(&CONFIG).await;
 
-    let db = db::SQLiteDatebase::new(&config).unwrap();
-    db.init(&config).unwrap();
+    // GET /, return a page with a form to upload a string
+    let index = warp::path::end().map(|| {
+        warp::reply::html(
+            r#"
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>软件设计实践 API token 获取</title>
+                </head>
+                <body>
+                    <h1>软件设计实践 API token 获取</h1>
+                    <form action="/api/v1/ai/token" method="post">
+                        <label for="id">学号</label>
+                        <input type="text" id="id" name="id" required />
+                        <br />
+                        <label for="password">密码</label>
+                        <input type="text" id="password" name="password" required />
+                        <br />
+                        <input type="submit" value="提交" />
+                    </form>
+                </body>
+            </html>
+        "#,
+        )
+    });
+
+    // POST /api/v1/ai/token, return a token
+    let get_token_api = warp::path!("api" / "v1" / "ai" / "token")
+        .and(warp::post())
+        .and(warp::body::form())
+        .then(handler::get_token);
+
+    // POST /api/ai/v1/translate
+    let translate_api = warp::path!("api" / "v1" / "ai" / "translate")
+        .and(warp::post())
+        .and(warp::header("Authorization"))
+        .and(warp::body::json())
+        .then(handler::translate);
+
+    let routes = index.or(get_token_api).or(translate_api);
+
+    warp::serve(routes).run(([0, 0, 0, 0], 4399)).await;
 }

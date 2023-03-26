@@ -1,26 +1,17 @@
-# The path to the database file
-db_file = "db.sqlite"
+mongo_uri = "mongodb://localhost:27017"
 
 # Allowed users
 user_csv = "users.csv"
 
-# openAI API token
-openai_token = ""
-wolfram_token = ""
-
-# The maximum number of requests per minute
-max_request = 60
-
-# The maximum number of requests per minute per user
-max_request_per_user = 30
-
 # Default settings for the bots
 
 [translate]
+token = ""
 source = "en"
 target = "zh"
 
 [chat]
+token = ""
 max_tokens = 100
 temperature = 0.9
 top_p = 1
@@ -29,9 +20,11 @@ presence_penalty = 0
 stop = ["\n", " Human:", " AI:"]
 
 [draw]
+token = ""
 number = 1
 width = 512
 height = 512
 
 [math]
+token = ""
 width = 512

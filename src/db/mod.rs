@@ -1,161 +1,79 @@
-mod student;
+pub(crate) mod student;
 
 use csv;
-use rusqlite::{params, Connection, Result};
-use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
-use std::sync::Mutex;
-
+use futures::StreamExt;
+use mongodb::{bson::doc, options::ClientOptions, Client, Collection, Database};
 use student::Student;
 
 use crate::config::Config;
 
-pub(crate) struct SQLiteDatebase {
-    pub(crate) conn: Connection,
-    mutex: Mutex<()>,
+pub(crate) async fn init(config: &Config) {
+    let client_options = ClientOptions::parse(&config.mongo_uri).await.unwrap();
+    let client = Client::with_options(client_options).unwrap();
+    let collection = client.database("ai").collection::<Student>("student");
+    let mut rdr = csv::Reader::from_path(&config.user_csv).unwrap();
+    for id in rdr.records() {
+        let id = id.unwrap()[0].to_string();
+        if get_student(&collection, &id).await.is_some() {
+            continue;
+        }
+        let student = Student::new(id);
+        insert_student(&collection, &student).await;
+    }
 }
 
-impl SQLiteDatebase {
-    pub fn new(config: &Config) -> Result<SQLiteDatebase> {
-        let conn = Connection::open(&config.db_file)?;
-        let mutex = Mutex::new(());
+pub(crate) async fn generate_connection(config: &Config) -> Collection<Student> {
+    let client_options = ClientOptions::parse(&config.mongo_uri).await.unwrap();
+    let client = Client::with_options(client_options).unwrap();
+    let collection = client.database("ai").collection::<Student>("student");
+    collection
+}
 
-        Ok(SQLiteDatebase { conn, mutex })
-    }
+pub(crate) async fn get_student(collection: &Collection<Student>, id: &str) -> Option<Student> {
+    let doc = doc! {"id": id};
+    let student = collection.find_one(doc, None).await.unwrap();
+    student
+}
 
-    pub fn init(&self, config: &Config) -> Result<()> {
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS students (
-                  id              TEXT PRIMARY KEY,
-                  num             INTEGER NOT NULL
-                  )",
-            params![],
-        )?;
+pub(crate) async fn get_student_by_token(
+    collection: &Collection<Student>,
+    token: &str,
+) -> Option<Student> {
+    let doc = doc! {"token": token};
+    let student = collection.find_one(doc, None).await.unwrap();
+    student
+}
 
-        self.conn.execute(
-            "CREATE TABLE IF NOT EXISTS version (
-                  hash            TEXT PRIMARY KEY
-                  )",
-            params![],
-        )?;
+pub(crate) async fn update_student(collection: &Collection<Student>, student: &Student) {
+    let filter = doc! {"id": &student.id};
+    let update = doc! {"$set": student};
+    collection.update_one(filter, update, None).await.unwrap();
+}
 
-        // generate current version
-        let mut hasher = Sha256::new();
-        let path = Path::new(&config.user_csv);
-        let file = File::open(path);
-        if file.is_err() {
-            error!("User csv file not found: {}", config.user_csv);
-            return Err(rusqlite::Error::InvalidQuery);
-        }
-        let mut file = file.unwrap();
-        let mut buffer = Vec::new();
-        file.read_to_end(&mut buffer).unwrap();
-        hasher.update(buffer);
-        let current_hash = format!("{:x}", hasher.finalize());
+pub(crate) async fn insert_student(collection: &Collection<Student>, student: &Student) {
+    collection.insert_one(student, None).await.unwrap();
+}
 
-        // read version
-        let mut stmt = self.conn.prepare("SELECT hash FROM version")?;
-        let mut rows = stmt.query(params![])?;
+pub(crate) async fn delete_student(collection: &Collection<Student>, id: &str) {
+    let doc = doc! {"id": id};
+    collection.delete_one(doc, None).await.unwrap();
+}
 
-        // If version is not exist, insert it
-        if let Ok(Some(row)) = rows.next() {
-            let hash: String = row.get(0)?;
-            if hash != current_hash {
-                info!("DB version is not match, updating...");
-                self.regenerate(config)?;
-            }
-        } else {
-            info!("DB version is not exist, updating...");
-            self.regenerate(config)?;
-        }
-
-        // update version
-        self.conn.execute("DELETE FROM version", params![])?;
-        self.conn.execute(
-            "INSERT INTO version (hash) VALUES (?)",
-            params![current_hash],
-        )?;
-
-        Ok(())
-    }
-
-    fn regenerate(&self, config: &Config) -> Result<()> {
-        // convert first colomn to set of String
-        let mut rdr = csv::ReaderBuilder::new()
-            .has_headers(false)
-            .from_path(&config.user_csv)
-            .unwrap();
-
-        let mut set = BTreeSet::new();
-
-        for result in rdr.records() {
-            let record = result.unwrap();
-            set.insert(record.get(0).unwrap().to_string());
-        }
-
-        // iterate db, for each student, if not in set, delete it, and delete from set
-        let mut stmt = self.conn.prepare("SELECT id, num FROM students")?;
-        let mut rows = stmt.query(params![])?;
-
-        while let Some(row) = rows.next()? {
-            let stu: Student = Student {
-                id: row.get(0).unwrap(),
-                num: row.get(1).unwrap(),
-            };
-            if set.contains(&stu.id) {
-                set.remove(&stu.id);
-            } else {
-                info!("Deleting student: {}", stu.id);
-                self.conn
-                    .execute("DELETE FROM students WHERE id = ?", params![stu.id])?;
-            }
-        }
-
-        // add remain students in set to db
-        for stu in set {
-            info!("Adding student: {}", stu);
-            self.conn.execute(
-                "INSERT INTO students (id, num) VALUES (?, ?)",
-                params![stu, 0],
-            )?;
-        }
-        Ok(())
-    }
-
-    fn get_student(&self, id: &str) -> Result<Student> {
-        let _lock = self.mutex.lock().unwrap();
-        let mut stmt = self
-            .conn
-            .prepare("SELECT id, num FROM students WHERE id = ?")?;
-        let mut rows = stmt.query(params![id])?;
-
-        if let Some(row) = rows.next()? {
-            let stu: Student = Student {
-                id: row.get(0).unwrap(),
-                num: row.get(1).unwrap(),
-            };
-            Ok(stu)
-        } else {
-            Err(rusqlite::Error::QueryReturnedNoRows)
+pub(crate) async fn get_all_students(collection: &Collection<Student>) -> Vec<Student> {
+    let mut cursor = collection.find(None, None).await.unwrap();
+    let mut students = Vec::new();
+    while let Some(result) = cursor.next().await {
+        match result {
+            Ok(student) => students.push(student),
+            Err(e) => error!("Failed to get student: {}", e),
         }
     }
+    students
+}
 
-    pub fn get_num(&self, id: &str) -> Result<i32> {
-        let stu = self.get_student(id)?;
-        Ok(stu.num)
-    }
-
-    // thread safe add num
-    pub fn add_num(&self, id: &str, num: i32) -> Result<()> {
-        let _lock = self.mutex.lock().unwrap();
-        let stu = self.get_student(id)?;
-        self.conn.execute(
-            "UPDATE students SET num = ? WHERE id = ?",
-            params![stu.num + num, id],
-        )?;
-        Ok(())
-    }
+// a transcacation for add one to student's num
+pub(crate) async fn add_one(collection: &Collection<Student>, mut student: Student) {
+    let doc = doc! {"id": &student.id};
+    student.num += 1;
+    collection.update_one(doc, student, None).await.unwrap();
 }
