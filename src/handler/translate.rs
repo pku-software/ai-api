@@ -19,7 +19,7 @@ pub(crate) async fn translate(token: String, map: HashMap<String, String>) -> Re
 
     let to = map.get("to").unwrap_or(&CONFIG.translate.target);
 
-    let result = translate::translate(&text, from, to).await.to_string();
+    let result = translate::translate(from, to, &text).await.to_string();
     Response::builder()
         .header("Content-Type", "application/json")
         .status(200)

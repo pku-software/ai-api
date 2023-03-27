@@ -3,6 +3,7 @@ use crate::db;
 use crate::db::student::Student;
 use crate::CONFIG;
 use mongodb::{options::ClientOptions, Client, Collection};
+use serde_json::json;
 use std::collections::HashMap;
 
 async fn generate_db_connection() -> Collection<Student> {
@@ -52,6 +53,17 @@ async fn test_translate_handler() {
 
     let res = crate::handler::translate(authorization_header, translate_map).await;
     assert_eq!(res.status(), 200);
+
+    assert_eq!(
+        res.body().to_owned(),
+        json!(
+            {
+                "status": "ok",
+                "text": "你好"
+            }
+        )
+        .to_string()
+    );
 
     // test get translate with wrong token
     let authorization_header = "Bearer wrongtoken".to_owned();
@@ -112,6 +124,4 @@ async fn test_wolframe_handler() {
 
     let res = crate::handler::wolfram(authorization_header.clone(), wolframe_map).await;
     assert_eq!(res.status(), 200);
-
-    println!("{:}", res.body());
 }

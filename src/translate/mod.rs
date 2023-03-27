@@ -54,7 +54,9 @@ pub(crate) async fn translate(from: &str, to: &str, text: &str) -> serde_json::V
             "text": "Text is empty",
         });
     }
+    println!("{} -> {} : {}", from, to, text);
     let text = baidu_translate(from, to, text).await;
+    println!("{:?}", text);
     if text.is_ok() {
         return json!({
             "status": "ok",
