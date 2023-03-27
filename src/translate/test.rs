@@ -10,3 +10,13 @@ async fn test_baidu_translate() {
     });
     assert_eq!(dat, ans);
 }
+
+#[tokio::test]
+async fn test_translate_null_text() {
+    let dat = translate("en", "zh", "").await;
+    let ans = json!({
+        "status": "failed",
+        "text": "Text is empty",
+    });
+    assert_eq!(dat, ans);
+}

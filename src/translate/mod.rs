@@ -3,6 +3,7 @@ mod test;
 use crate::CONFIG;
 use rand::{self, Rng};
 use serde_json::json;
+use warp::body::json;
 
 const BAIDU_TRANSLATE_URL: &str = "https://fanyi-api.baidu.com/api/trans/vip/translate";
 
@@ -43,20 +44,26 @@ async fn baidu_translate(from: &str, to: &str, text: &str) -> Result<serde_json:
             return Err(format!("Failed to parse response from Baidu translate"));
         }
     };
-
     Ok(json)
 }
 
 pub(crate) async fn translate(from: &str, to: &str, text: &str) -> serde_json::Value {
-    let text = match baidu_translate(from, to, text).await {
-        Ok(json) => json!({
-            "status": "ok",
-            "text": json["trans_result"][0]["dst"].as_str().unwrap(),
-        }),
-        Err(err) => json!({
+    if text.len() == 0 {
+        return json!({
             "status": "failed",
-            "error": err,
-        }),
-    };
-    text
+            "text": "Text is empty",
+        });
+    }
+    let text = baidu_translate(from, to, text).await;
+    if text.is_ok() {
+        return json!({
+            "status": "ok",
+            "text": text.unwrap()["trans_result"][0]["dst"].as_str(),
+        });
+    } else {
+        return json!({
+            "status": "failed",
+            "text": text.err().unwrap(),
+        });
+    }
 }
