@@ -77,3 +77,8 @@ pub(crate) async fn add_one(collection: &Collection<Student>, mut student: Stude
     student.num += 1;
     update_student(&collection, &student).await;
 }
+
+pub(crate) async fn set_accessed(collection: &Collection<Student>, mut student: Student) {
+    student.used = true;
+    update_student(&collection, &student).await;
+}

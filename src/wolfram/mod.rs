@@ -1,11 +1,12 @@
 mod test;
 
 use crate::CONFIG;
+use bytes::Bytes;
 use std::collections::HashMap;
 
 const WOLFRAM_BASEURL: &str = "https://api.wolframalpha.com/v1/simple";
 
-pub(crate) async fn wolfram(query: String) -> Result<String, String> {
+pub(crate) async fn wolfram(query: String) -> Result<Bytes, String> {
     let client = reqwest::Client::new();
     let res = client
         .get(WOLFRAM_BASEURL)
@@ -21,6 +22,6 @@ pub(crate) async fn wolfram(query: String) -> Result<String, String> {
         return Err("WolframAlpha API error".to_string());
     }
 
-    let res = res.text().await.unwrap();
+    let res = res.bytes().await.unwrap();
     Ok(res)
 }

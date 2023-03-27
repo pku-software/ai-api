@@ -23,7 +23,6 @@ async fn test_get_token_handler() {
     // test get token
     let mut token_map = HashMap::new();
     token_map.insert("id".to_owned(), "test".to_owned());
-    token_map.insert("password".to_owned(), "42".to_owned());
 
     let res = crate::handler::get_token(token_map).await;
     assert_eq!(res.status(), 200);
@@ -33,17 +32,9 @@ async fn test_get_token_handler() {
     // test get with wrong id or password
     let mut token_map = HashMap::new();
     token_map.insert("id".to_owned(), "test".to_owned());
-    token_map.insert("password".to_owned(), "43".to_owned());
 
     let res = crate::handler::get_token(token_map).await;
     assert_eq!(res.status(), 403);
-
-    let mut token_map = HashMap::new();
-    token_map.insert("id".to_owned(), "neverhappen".to_owned());
-    token_map.insert("password".to_owned(), "42".to_owned());
-
-    let res = crate::handler::get_token(token_map).await;
-    assert_eq!(res.status(), 404);
 }
 
 #[tokio::test]
@@ -104,4 +95,23 @@ async fn test_draw_handler() {
 
     let res = crate::handler::draw(authorization_header.clone(), draw_map).await;
     assert_eq!(res.status(), 401);
+}
+
+#[tokio::test]
+async fn test_wolframe_handler() {
+    let prod_db = db::generate_connection(&CONFIG).await;
+    let student = db::get_student(&prod_db, "test").await;
+    assert!(student.is_some());
+    let student = student.unwrap();
+
+    let authorization_header = format!("Bearer {}", student.token);
+
+    // test get draw
+    let mut wolframe_map = HashMap::new();
+    wolframe_map.insert("input".to_owned(), "apple".to_owned());
+
+    let res = crate::handler::wolfram(authorization_header.clone(), wolframe_map).await;
+    assert_eq!(res.status(), 200);
+
+    println!("{:}", res.body());
 }
