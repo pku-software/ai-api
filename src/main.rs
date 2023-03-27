@@ -11,6 +11,7 @@ pub(crate) mod db;
 pub(crate) mod handler;
 pub(crate) mod openai;
 pub(crate) mod translate;
+pub(crate) mod wolfram;
 
 pub(crate) static CONFIG: Lazy<Config> = Lazy::new(|| Config::from_toml("config.toml"));
 
@@ -107,6 +108,12 @@ async fn main() {
         .and(warp::body::json())
         .then(handler::draw);
 
+    let math_api = warp::path!("api" / "v1" / "ai" / "wolfram")
+        .and(warp::post())
+        .and(warp::header("Authorization"))
+        .and(warp::body::json())
+        .then(handler::wolfram);
+
     // use reqwest to get google for conectivity test
     let client = reqwest::Client::new();
     let res = client.get("https://www.google.com").send().await.unwrap();
@@ -122,7 +129,8 @@ async fn main() {
         .or(get_token_api)
         .or(translate_api)
         .or(chat_api)
-        .or(draw_api);
+        .or(draw_api)
+        .or(math_api);
 
     warp::serve(routes).run(([0, 0, 0, 0], 4399)).await;
 }

@@ -49,6 +49,38 @@ pub(super) fn bad_request() -> Response<String> {
         .unwrap()
 }
 
+pub(crate) fn network_error() -> Response<String> {
+    Response::builder()
+        .header("Content-Type", "application/json")
+        .status(500)
+        .body(
+            json!(
+                {
+                    "status": "failed",
+                    "text": "Network error"
+                }
+            )
+            .to_string(),
+        )
+        .unwrap()
+}
+
+pub(crate) fn image_decode_error() -> Response<String> {
+    Response::builder()
+        .header("Content-Type", "application/json")
+        .status(400)
+        .body(
+            json!(
+                {
+                    "status": "failed",
+                    "text": "Image decode error"
+                }
+            )
+            .to_string(),
+        )
+        .unwrap()
+}
+
 pub(super) fn get_string_from_map<'a>(
     map: &'a HashMap<String, String>,
     key: &str,
