@@ -2,7 +2,9 @@
 
 This is a simple web server for calling openai APIs. It is designed for PKU software course (aka. 软件设计实践) project.
 
-** Warning: The project is finished in a harry, filled with awful practices. DO NOT LEARN FROM IT. **
+**Warning: The project is finished in a harry, filled with awful practices.**
+
+**DO NOT LEARN FROM IT.**
 
 ## Installation
 
@@ -14,11 +16,12 @@ cargo build --release
 
 ## Usage
 
-See the help message for more information.
+See the help message for more information. The config.toml is needed, otherwise the server will not start.
+
 
 ```bash
 
-ai-api-server -c config.toml -b 0.0.0.0:4399 --debug
+ai-api-server -b 0.0.0.0:4399 --debug
 
 ```
 
@@ -33,10 +36,12 @@ A token is needed for all requests. You should put the token in the `Authorizati
 For example, if your token is `dGVzdA==`, just put it in your header.
 
 ```http
-Authorization: Basic dGVzdA==
+Authorization: Bearer dGVzdA==
 ```
 
-### POST /api/ai/v1/translate
+If the token is invalid, the server will return a `401 Unauthorized` response.
+
+### POST /api/v1/ai/translate
 
 Translate text from one language to another.
 
@@ -63,6 +68,8 @@ Translate text from one language to another.
 
 ##### Error
 
+Example JSON: 
+
 ```json
 {
     "status": "failed",
@@ -70,7 +77,7 @@ Translate text from one language to another.
 }
 ```
 
-### POST /api/ai/v1/chat
+### POST /api/v1/ai/chat
 
 Interact with a chatbot. You should provide a prompt for the chatbot to generate a completition.
 
@@ -102,7 +109,7 @@ Interact with a chatbot. You should provide a prompt for the chatbot to generate
 }
 ```
 
-### POST /api/ai/v1/draw
+### POST /api/v1/ai/draw
 
 Draw a picture. You should provide a prompt for the model to generate a completition.
 
@@ -111,11 +118,15 @@ Draw a picture. You should provide a prompt for the model to generate a completi
 ```json
 {
     "prompt": "Apple",
-    "number": 1,
-    "width": 1024,
-    "height": 1024
+    "kind": "1"
 }
 ```
+
+Valid kind: 1, 2, 3
+
+- 1: 256x256
+- 2: 512x512
+- 3: 1024x1024
 
 #### Response
 
@@ -139,7 +150,7 @@ Return a base64 encoded image.
 }
 ```
 
-### POST /api/ai/v1/wolfram
+### POST /api/v1/ai/wolfram
 
 Ask a question to wolfram alpha, return the answer as a picture.
 
