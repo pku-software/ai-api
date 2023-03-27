@@ -7,6 +7,7 @@ pub(crate) struct Student {
     pub id: String,
     pub num: i32,
     pub token: String,
+    pub used: bool,
 }
 
 impl Student {
@@ -15,19 +16,22 @@ impl Student {
             id,
             num: 0,
             token: Uuid::new_v4().to_string(),
+            used: false,
         }
     }
 }
 
 impl Into<UpdateModifications> for Student {
     fn into(self) -> UpdateModifications {
-        let doc = doc! {"id": &self.id, "num": &self.num, "token": &self.token};
+        let doc = doc! {"id": &self.id, "num": &self.num, "token": &self.token, "used": &self.used};
         UpdateModifications::Document(doc)
     }
 }
 
 impl Into<Bson> for Student {
     fn into(self) -> Bson {
-        Bson::Document(doc! {"id": &self.id, "num": &self.num, "token": &self.token})
+        Bson::Document(
+            doc! {"id": &self.id, "num": &self.num, "token": &self.token, "used": &self.used},
+        )
     }
 }
