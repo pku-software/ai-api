@@ -90,7 +90,7 @@ impl Config {
         match toml::from_str(&s) {
             Ok(config) => config,
             Err(e) => {
-                println!("Error: {}", e);
+                error!("Error: {}", e);
                 Config::new()
             }
         }
