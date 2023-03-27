@@ -1,4 +1,5 @@
 pub(crate) mod student;
+mod test;
 
 use csv;
 use futures::StreamExt;
@@ -73,7 +74,6 @@ pub(crate) async fn get_all_students(collection: &Collection<Student>) -> Vec<St
 
 // a transcacation for add one to student's num
 pub(crate) async fn add_one(collection: &Collection<Student>, mut student: Student) {
-    let doc = doc! {"id": &student.id};
     student.num += 1;
-    collection.update_one(doc, student, None).await.unwrap();
+    update_student(&collection, &student).await;
 }
