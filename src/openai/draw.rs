@@ -23,7 +23,7 @@ pub async fn draw(prompt: String, kind: i32) -> serde_json::Value {
     let client = reqwest::Client::new();
     let res = client
         .post(IMAGE_BASEURI)
-        .bearer_auth(&CONFIG.chat.token)
+        .bearer_auth(&CONFIG.draw.token)
         .header("Content-Type", "application/json")
         .body(request_json.to_string())
         .send()
