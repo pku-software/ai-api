@@ -25,12 +25,16 @@ pub(crate) async fn get_token(map: HashMap<String, String>) -> Response<String> 
         return Response::builder()
             .header("Content-Type", "text/plain")
             .status(403)
-            .body("The id has been used. If you lost the token, please contact the TA.".to_owned())
+            .body(
+                "The id has been used. If you have lost the token, please contact the TA."
+                    .to_owned(),
+            )
             .unwrap();
     }
 
     student.used = true;
     db::update_student(&collection, &student).await;
+    info!("student {} get token", &student.id);
     Response::builder()
         .header("Content-Type", "text/plain")
         .status(200)

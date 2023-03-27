@@ -70,10 +70,6 @@ async fn main() {
                     <form action="/api/v1/ai/token" method="post">
                         <label for="id">学号</label>
                         <input type="text" id="id" name="id" required />
-                        <br />
-                        <label for="password">密码</label>
-                        <input type="text" id="password" name="password" required />
-                        <br />
                         <input type="submit" value="提交" />
                     </form>
                 </body>
