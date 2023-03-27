@@ -101,6 +101,12 @@ async fn main() {
         .and(warp::body::json())
         .then(handler::chat);
 
+    let draw_api = warp::path!("api" / "v1" / "ai" / "draw")
+        .and(warp::post())
+        .and(warp::header("Authorization"))
+        .and(warp::body::json())
+        .then(handler::draw);
+
     // use reqwest to get google for conectivity test
     let client = reqwest::Client::new();
     let res = client.get("https://www.google.com").send().await.unwrap();
@@ -112,7 +118,11 @@ async fn main() {
         return;
     }
 
-    let routes = index.or(get_token_api).or(translate_api).or(chat_api);
+    let routes = index
+        .or(get_token_api)
+        .or(translate_api)
+        .or(chat_api)
+        .or(draw_api);
 
     warp::serve(routes).run(([0, 0, 0, 0], 4399)).await;
 }
