@@ -1,7 +1,7 @@
 use super::utils::*;
 use crate::{handler::utils, CONFIG};
 use base64::Engine;
-use image;
+use image::{self, EncodableLayout};
 use serde_json::json;
 use std::{collections::HashMap, io};
 use warp::{body::json, http::Response};
@@ -29,7 +29,7 @@ pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Resp
     if gif_image.is_err() {
         warn!(
             "Wolfram Alpha image decode error: {:}",
-            gif_image.err().unwrap()
+            &gif_image.err().unwrap().to_string().clone()
         );
         return utils::image_decode_error();
     }
@@ -42,7 +42,6 @@ pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Resp
         .unwrap();
 
     let base64_bmp = base64::engine::general_purpose::STANDARD_NO_PAD.encode(bmp.get_ref());
-
     Response::builder()
         .header("Content-Type", "application/json")
         .status(200)
@@ -50,7 +49,7 @@ pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Resp
             json!(
                 {
                     "status": "ok",
-                    "decoded_image": base64_bmp
+                    "decoded_image": format!("data:image/bmp;base64, {}", base64_bmp)
                 }
             )
             .to_string(),

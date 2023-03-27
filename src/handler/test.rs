@@ -110,5 +110,8 @@ async fn test_wolframe_handler() {
     let mut wolframe_map = HashMap::new();
     wolframe_map.insert("input".to_owned(), "apple".to_owned());
 
-    crate::handler::wolfram(authorization_header.clone(), wolframe_map).await;
+    let res = crate::handler::wolfram(authorization_header.clone(), wolframe_map).await;
+    assert_eq!(res.status(), 200);
+
+    println!("{:}", res.body());
 }
