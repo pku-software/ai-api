@@ -10,6 +10,6 @@ async fn test_chatgpt() {
 
 #[tokio::test]
 async fn test_draw() {
-    let dat = draw("apple".to_owned(), 256, 256).await;
+    let dat = draw("apple".to_owned(), 1).await;
     assert!(dat["status"] == "ok");
 }

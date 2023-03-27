@@ -4,12 +4,19 @@ use crate::CONFIG;
 
 const IMAGE_BASEURI: &str = "https://api.openai.com/v1/images/generations";
 
-pub(crate) async fn draw(prompt: String, height: i32, width: i32) -> serde_json::Value {
+pub async fn draw(prompt: String, kind: i32) -> serde_json::Value {
+    let size = match kind {
+        1 => "256x256",
+        2 => "512x512",
+        3 => "1024x1024",
+        _ => "256x256",
+    };
+
     let request_json = json!(
         {
             "prompt": prompt,
             "n":1,
-            "size": format!("{}x{}", height, width),
+            "size": size,
             "response_format": "b64_json"
         }
     );
@@ -25,67 +32,43 @@ pub(crate) async fn draw(prompt: String, height: i32, width: i32) -> serde_json:
         Ok(res) => res,
         Err(err) => {
             error!("Failed to send request: {}", err);
-            return json!({
-                "status": "failed",
-                "error": "Network error",
-            });
+            return super::error::network_error();
         }
     };
     if res.status() != 200 {
-        return json!({
-            "status": "failed",
-            "error": "Network error",
-        });
+        return super::error::network_error();
     }
     let res = match res.text().await {
         Ok(res) => res,
         Err(err) => {
             error!("Failed to get response: {}", err);
-            return json!({
-                "status": "failed",
-                "error": "Cannot get response",
-            });
+            return super::error::network_error();
         }
     };
     let res = match serde_json::from_str::<serde_json::Value>(&res) {
         Ok(res) => res,
         Err(err) => {
             error!("Failed to parse response: {}", err);
-            return json!({
-                "status": "failed",
-                "error": "JSON parse error",
-            });
+            super::error::parse_json_error()
         }
     };
 
     let data = match res["data"].as_array() {
         Some(data) => data,
-        None => {
-            error!("Failed to parse response: data is not an array");
-            return json!({
-                "status": "failed",
-                "error": "JSON parse error",
-            });
-        }
+        None => return super::error::parse_json_error(),
     };
     let data = match data.get(0) {
-        Some(data) => data,
+        Some(data) => data.clone(),
         None => {
             error!("Failed to parse response: data is empty");
-            return json!({
-                "status": "failed",
-                "error": "JSON parse error",
-            });
+            super::error::parse_json_error()
         }
     };
     let data = match data["b64_json"].as_str() {
         Some(data) => data,
         None => {
             error!("Failed to parse response: data is not a string");
-            return json!({
-                "status": "failed",
-                "error": "JSON parse error",
-            });
+            return super::error::parse_json_error();
         }
     };
 
