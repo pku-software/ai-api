@@ -128,5 +128,10 @@ async fn main() {
         .or(draw_api)
         .or(math_api);
 
-    warp::serve(routes).run(([0, 0, 0, 0], 4399)).await;
+    let bind = bind.split(":").collect::<Vec<&str>>();
+    let ip = bind[0];
+    let port = bind[1].parse::<u16>().unwrap();
+    let ip = ip.parse::<std::net::IpAddr>().unwrap();
+
+    warp::serve(routes).run((ip, port)).await;
 }
