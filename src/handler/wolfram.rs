@@ -49,7 +49,7 @@ pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Resp
             json!(
                 {
                     "status": "ok",
-                    "decoded_image": format!("data:image/bmp;base64, {}", base64_bmp)
+                    "image": format!("data:image/bmp;base64, {}", base64_bmp)
                 }
             )
             .to_string(),

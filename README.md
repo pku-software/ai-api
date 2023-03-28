@@ -137,7 +137,7 @@ Return a base64 encoded image.
 ```json
 {
     "status": "ok",
-    "decoded_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAA"
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAA"
 }
 ```
 
@@ -171,7 +171,7 @@ Return a base64 encoded image.
 ```json
 {
     "status": "ok",
-    "decoded_image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAA"
+    "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAA"
 }
 ```
 

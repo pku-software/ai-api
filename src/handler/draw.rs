@@ -18,7 +18,7 @@ pub(crate) async fn draw(token: String, map: HashMap<String, String>) -> Respons
         Err(res) => return res,
     };
 
-    if kind <= 0 || kind > 3 {
+    if kind <= 0 || kind >= 4 {
         return bad_request();
     }
 

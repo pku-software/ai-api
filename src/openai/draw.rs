@@ -36,6 +36,7 @@ pub async fn draw(prompt: String, kind: i32) -> serde_json::Value {
         }
     };
     if res.status() != 200 {
+        error!("Failed to send request: {}", res.status());
         return super::error::network_error();
     }
     let res = match res.text().await {
@@ -75,7 +76,7 @@ pub async fn draw(prompt: String, kind: i32) -> serde_json::Value {
     json!(
         {
             "status": "ok",
-            "decoded_image": data,
+            "image": format!("data:image/png;base64, {}", data),
         }
     )
 }
