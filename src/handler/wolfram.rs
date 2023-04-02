@@ -7,7 +7,10 @@ use std::{collections::HashMap, io};
 use warp::{body::json, http::Response};
 
 pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Response<String> {
-    if check_token(&token).await.is_err() {
+    if check_token(&token, crate::db::log::LogType::MATH)
+        .await
+        .is_err()
+    {
         return token_error();
     }
 

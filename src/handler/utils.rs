@@ -1,16 +1,17 @@
 use std::collections::HashMap;
 
 use crate::db;
+use crate::db::log::LogType;
 use crate::CONFIG;
 use serde_json::json;
 use warp::http::Response;
 
-pub(super) async fn check_token(token: &String) -> Result<(), String> {
+pub(super) async fn check_token(token: &String, log_type: LogType) -> Result<(), String> {
     let collection = db::generate_connection(&CONFIG).await;
     let token = token.trim().split(" ").collect::<Vec<&str>>()[1].to_owned();
     let student = db::get_student_by_token(&collection, &token).await;
     if let Some(student) = student {
-        db::add_one(&collection, student).await;
+        db::add_one(&collection, student, log_type).await;
         return Ok(());
     } else {
         return Err(format!("Invalid token {:}", token));

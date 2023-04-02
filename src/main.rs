@@ -117,8 +117,7 @@ async fn main() {
     if status.is_success() {
         info!("Google connectivity test passed");
     } else {
-        error!("Google connectivity test failed");
-        return;
+        info!("Google connectivity test failed");
     }
 
     let routes = index

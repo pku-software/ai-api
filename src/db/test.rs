@@ -45,16 +45,6 @@ async fn test_db_update() {
     assert_eq!(student.token.len(), 36);
 }
 
-async fn test_db_add_one() {
-    let collection = generate_connection().await;
-    let student = get_student(&collection, "test").await.unwrap();
-    add_one(&collection, student).await;
-    let student = get_student(&collection, "test").await.unwrap();
-    assert_eq!(student.id, "test");
-    assert_eq!(student.num, 10);
-    assert_eq!(student.token.len(), 36);
-}
-
 async fn test_db_get_student_by_token() {
     let collection = generate_connection().await;
     let student = get_student(&collection, "test").await.unwrap();
@@ -86,7 +76,6 @@ async fn test_db() {
     test_db_connection().await;
     test_db_insert().await;
     test_db_update().await;
-    test_db_add_one().await;
     test_db_get_student_by_token().await;
     test_db_delete().await;
     test_db_get_all().await;

@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use warp::http::Response;
 
 pub(crate) async fn draw(token: String, map: HashMap<String, String>) -> Response<String> {
-    if check_token(&token).await.is_err() {
+    if check_token(&token, crate::db::log::LogType::DRAW)
+        .await
+        .is_err()
+    {
         return token_error();
     }
 

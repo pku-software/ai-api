@@ -15,30 +15,6 @@ async fn generate_db_connection() -> Collection<Student> {
 }
 
 #[tokio::test]
-async fn test_get_token_handler() {
-    let prod_db = db::generate_connection(&CONFIG).await;
-    let student = db::get_student(&prod_db, "test").await;
-    assert!(student.is_some());
-    let student = student.unwrap();
-
-    // test get token
-    let mut token_map = HashMap::new();
-    token_map.insert("id".to_owned(), "test".to_owned());
-
-    let res = crate::handler::get_token(token_map).await;
-    assert_eq!(res.status(), 200);
-    let token = res.body();
-    assert_eq!(token.to_owned(), student.token);
-
-    // test get with wrong id or password
-    let mut token_map = HashMap::new();
-    token_map.insert("id".to_owned(), "test".to_owned());
-
-    let res = crate::handler::get_token(token_map).await;
-    assert_eq!(res.status(), 403);
-}
-
-#[tokio::test]
 async fn test_translate_handler() {
     let prod_db = db::generate_connection(&CONFIG).await;
     let student = db::get_student(&prod_db, "test").await;

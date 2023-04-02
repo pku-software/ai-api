@@ -34,6 +34,7 @@ pub(crate) async fn get_token(map: HashMap<String, String>) -> Response<String> 
 
     student.used = true;
     db::update_student(&collection, &student).await;
+    db::add_log(student.clone(), db::log::LogType::TOKEN).await;
     info!("student {} get token", &student.id);
     Response::builder()
         .header("Content-Type", "text/plain")
