@@ -1,8 +1,8 @@
-# An simple web server for calling openai APIs
+# An simple web server for calling OpenAI APIs
 
-This is a simple web server for calling openai APIs. It is designed for PKU software course (aka. 软件设计实践) project.
+This is a simple web server for calling OpenAI APIs, designed for PKU software course (aka. 软件设计实践) mid-term project.
 
-**Warning: The project is finished in a harry, filled with awful practices.**
+**Warning: The project is finished in a hurry, filled with awful practices.**
 
 **DO NOT LEARN FROM IT.**
 
