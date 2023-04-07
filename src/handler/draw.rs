@@ -28,7 +28,7 @@ pub(crate) async fn draw(token: String, map: HashMap<String, String>) -> Respons
     let ans = crate::openai::draw(prompt, kind).await;
 
     Response::builder()
-        .header("Content-Type", "text/plain")
+        .header("Content-Type", "application/json")
         .status(200)
         .body(ans.to_string())
         .unwrap()

@@ -3,7 +3,6 @@ use ::openai::{
     chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole},
     set_key,
 };
-use openai::completions::Completion;
 use serde_json::json;
 
 pub(crate) async fn chat(chat_config: &Chat, prompt: &str) -> serde_json::Value {

@@ -1,10 +1,10 @@
 use super::utils::*;
-use crate::{handler::utils, CONFIG};
+use crate::handler::utils;
 use base64::Engine;
 use image::{self, EncodableLayout};
 use serde_json::json;
 use std::{collections::HashMap, io};
-use warp::{body::json, http::Response};
+use warp::http::Response;
 
 pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Response<String> {
     if check_token(&token, crate::db::log::LogType::MATH)
@@ -38,13 +38,13 @@ pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Resp
     }
 
     let gif_image = gif_image.unwrap();
-    // convert to base64 bmp
-    let mut bmp = io::Cursor::new(Vec::new());
+    // convert to base64 png
+    let mut pic = io::Cursor::new(Vec::new());
     gif_image
-        .write_to(&mut bmp, image::ImageOutputFormat::Bmp)
+        .write_to(&mut pic, image::ImageOutputFormat::Png)
         .unwrap();
 
-    let base64_bmp = base64::engine::general_purpose::STANDARD_NO_PAD.encode(bmp.get_ref());
+    let base64_pic = base64::engine::general_purpose::STANDARD_NO_PAD.encode(pic.get_ref());
     Response::builder()
         .header("Content-Type", "application/json")
         .status(200)
@@ -52,7 +52,7 @@ pub(crate) async fn wolfram(token: String, map: HashMap<String, String>) -> Resp
             json!(
                 {
                     "status": "ok",
-                    "image": format!("data:image/bmp;base64, {}", base64_bmp)
+                    "image": format!("data:image/png;base64,{}", base64_pic)
                 }
             )
             .to_string(),

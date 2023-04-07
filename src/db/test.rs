@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::db::*;
-use mongodb::{Client, Collection, Database};
+use mongodb::{Client, Collection};
 
 async fn generate_connection() -> Collection<Student> {
     let config = Config::new();

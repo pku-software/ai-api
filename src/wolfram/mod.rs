@@ -2,7 +2,6 @@ mod test;
 
 use crate::CONFIG;
 use bytes::Bytes;
-use std::collections::HashMap;
 
 const WOLFRAM_BASEURL: &str = "https://api.wolframalpha.com/v1/simple";
 

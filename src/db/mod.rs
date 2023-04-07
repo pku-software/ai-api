@@ -4,7 +4,7 @@ mod test;
 
 use csv;
 use futures::StreamExt;
-use mongodb::{bson::doc, options::ClientOptions, Client, Collection, Database};
+use mongodb::{bson::doc, options::ClientOptions, Client, Collection};
 use student::Student;
 
 use crate::{config::Config, CONFIG};

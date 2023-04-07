@@ -3,7 +3,6 @@ mod test;
 use crate::CONFIG;
 use rand::{self, Rng};
 use serde_json::json;
-use warp::body::json;
 
 const BAIDU_TRANSLATE_URL: &str = "https://fanyi-api.baidu.com/api/trans/vip/translate";
 
